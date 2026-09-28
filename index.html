@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Hollow Knight — Bosses</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #0b0d12;
+            color: #e8e8e8;
+        }
+
+        header {
+            text-align: center;
+            padding: 60px 20px;
+            background:
+                radial-gradient(circle at center, #252a3b 0%, #0b0d12 70%);
+            border-bottom: 1px solid #303646;
+        }
+
+        header h1 {
+            font-size: 52px;
+            letter-spacing: 4px;
+            margin-bottom: 15px;
+        }
+
+        header p {
+            color: #9da5b5;
+            font-size: 18px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 40px 20px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 35px;
+            flex-wrap: wrap;
+        }
+
+        input, select {
+            background: #151922;
+            color: white;
+            border: 1px solid #343b4d;
+            border-radius: 8px;
+            padding: 14px 16px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        input {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #7285c4;
+        }
+
+        .boss-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .boss-card {
+            background: #151922;
+            border: 1px solid #292f3d;
+            border-radius: 12px;
+            padding: 25px;
+            transition: 0.25s;
+        }
+
+        .boss-card:hover {
+            transform: translateY(-5px);
+            border-color: #6577b5;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .boss-number {
+            color: #717b91;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .boss-card h2 {
+            font-size: 22px;
+            margin-bottom: 12px;
+        }
+
+        .boss-card p {
+            color: #aeb5c4;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        .tag {
+            display: inline-block;
+            margin-top: 18px;
+            padding: 6px 10px;
+            border-radius: 20px;
+            background: #242b3c;
+            color: #9daee0;
+            font-size: 12px;
+        }
+
+        .counter {
+            color: #7f889b;
+            margin-bottom: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 50px 20px;
+            color: #666e7e;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 34px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>HOLLOW KNIGHT</h1>
+    <p>Бестиарий боссов Hallownest</p>
+</header>
+
+<main class="container">
+
+    <div class="controls">
+        <input
+            type="text"
+            id="search"
+            placeholder="🔍 Поиск босса..."
+        >
+
+        <select id="type">
+            <option value="all">Все боссы</option>
+            <option value="main">Основные</option>
+            <option value="dream">Warrior Dreams</option>
+            <option value="dlc">DLC / Godhome</option>
+        </select>
+    </div>
+
+    <div class="counter" id="counter"></div>
+
+    <div class="boss-grid" id="bossGrid"></div>
+
+</main>
+
+<footer>
+    Hollow Knight Bosses • Fan-made project
+</footer>
+
+
+<script>
+
+const bosses = [
+
+    {
+        name: "False Knight",
+        type: "main",
+        description:
+            "Один из первых серьёзных противников Рыцаря. Сражается огромной булавой и скрывает настоящее тело внутри брони."
+    },
+
+    {
+        name: "Hornet Protector",
+        type: "main",
+        description:
+            "Таинственная защитница Грязьмута. Быстрая и ловкая противница, использующая иглу и нити."
+    },
+
+    {
+        name: "Gruz Mother",
+        type: "main",
+        description:
+            "Огромная заражённая Gruzzer, обитающая на забытом перекрёстке."
+    },
+
+    {
+        name: "Brooding Mawlek",
+        type: "main",
+        description:
+            "Изолированный и агрессивный Mawlek. Атакует когтями и выбрасывает заражённую жидкость."
+    },
+
+    {
+        name: "Mantis Lords",
+        type: "main",
+        description:
+            "Три невероятно быстрых повелителя племени Богомолов. Бой проверяет реакцию и чувство ритма."
+    },
+
+    {
+        name: "Soul Master",
+        type: "main",
+        description:
+            "Повелитель Святилища Душ. Использует телепортацию, энергетические атаки и обманные движения."
+    },
+
+    {
+        name: "Dung Defender",
+        type: "main",
+        description:
+            "Гордый защитник Королевских каналов. Атакует, зарываясь под землю и бросая в Рыцаря комки грязи."
+    },
+
+    {
+        name: "Broken Vessel",
+        type: "main",
+        description:
+            "Павший Сосуд, заражённый Инфекцией. Его движения напоминают движения самого Рыцаря."
+    },
+
+    {
+        name: "Watcher Knight",
+        type: "main",
+        description:
+            "Группа рыцарей, охраняющих вход к Наблюдателю Луриену."
+    },
+
+    {
+        name: "Uumuu",
+        type: "main",
+        description:
+            "Электрическое существо, обитающее в Туманном каньоне. Его защиту непросто пробить."
+    },
+
+    {
+        name: "Nosk",
+        type: "main",
+        description:
+            "Странное существо, способное принимать облик других персонажей. Встречается в Глубоком гнезде."
+    },
+
+    {
+        name: "Traitor Lord",
+        type: "main",
+        description:
+            "Бывший член племени Богомолов, изгнанный за предательство. Использует мощные атаки ближнего боя."
+    },
+
+    {
+        name: "Hive Knight",
+        type: "main",
+        description:
+            "Страж Улья. Быстрый рыцарь, защищающий свою королеву."
+    },
+
+    {
+        name: "The Collector",
+        type: "main",
+        description:
+            "Таинственное существо, собирающее живых существ в банки. Использует маленьких врагов в бою."
+    },
+
+    {
+        name: "Troupe Master Grimm",
+        type: "dlc",
+        description:
+            "Лидер Труппы Гримма. Элегантный, невероятно быстрый и огненный противник."
+    },
+
+    {
+        name: "Great Nailsage Sly",
+        type: "dlc",
+        description:
+            "Мастер искусства Гвоздя. Несмотря на небольшой рост, обладает огромной скоростью."
+    },
+
+    {
+        name: "God Tamer",
+        type: "dlc",
+        description:
+            "Воительница Колизея, сражающаяся вместе со своим огромным зверем."
+    },
+
+    {
+        name: "Elder Hu",
+        type: "dream",
+        description:
+            "Воин из прошлого, которого Рыцарь может встретить благодаря Гвоздю Грез."
+    },
+
+    {
+        name: "Gorb",
+        type: "dream",
+        description:
+            "Странный дух, называющий себя возвышенным. Атакует волнами энергетических шипов."
+    },
+
+    {
+        name: "Xero",
+        type: "dream",
+        description:
+            "Дух древнего воина, вооружённый парящими гвоздями."
+    },
+
+    {
+        name: "Marmu",
+        type: "dream",
+        description:
+            "Дух маленького существа, который превращается в огромный отскакивающий снаряд."
+    },
+
+    {
+        name: "No Eyes",
+        type: "dream",
+        description:
+            "Печальный дух, окружённый множеством духовных существ. Бой проходит в тёмной атмосфере."
+    },
+
+    {
+        name: "Galien",
+        type: "dream",
+        description:
+            "Воин, который мечтал стать величайшим защитником Hallownest."
+    },
+
+    {
+        name: "Markoth",
+        type: "dream",
+        description:
+            "Древний воин, использующий щиты и парящие гвозди."
+    },
+
+    {
+        name: "The Hollow Knight",
+        type: "main",
+        description:
+            "Один из центральных персонажей истории и финальный противник некоторых концовок."
+    },
+
+    {
+        name: "The Radiance",
+        type: "main",
+        description:
+            "Таинственное божество, связанное с Инфекцией. Один из самых важных противников игры."
+    },
+
+    {
+        name: "Pure Vessel",
+        type: "dlc",
+        description:
+            "Чистая форма Сосуда. Быстрый и чрезвычайно опасный противник из Godhome."
+    },
+
+    {
+        name: "Nightmare King Grimm",
+        type: "dlc",
+        description:
+            "Кошмарная форма Гримма. Один из наиболее быстрых и требовательных боёв."
+    }
+
+];
+
+
+const grid = document.getElementById("bossGrid");
+const search = document.getElementById("search");
+const type = document.getElementById("type");
+const counter = document.getElementById("counter");
+
+
+function getTypeName(type) {
+
+    if (type === "main") return "Основной босс";
+
+    if (type === "dream") return "Warrior Dream";
+
+    if (type === "dlc") return "DLC / Godhome";
+
+    return "Босс";
+
+}
+
+
+function render() {
+
+    const searchText = search.value.toLowerCase();
+
+    const selectedType = type.value;
+
+    const filtered = bosses.filter(boss => {
+
+        const matchesSearch =
+            boss.name.toLowerCase().includes(searchText);
+
+        const matchesType =
+            selectedType === "all" ||
+            boss.type === selectedType;
+
+        return matchesSearch && matchesType;
+
+    });
+
+
+    grid.innerHTML = "";
+
+
+    filtered.forEach((boss, index) => {
+
+        const card = document.createElement("div");
+
+        card.className = "boss-card";
+
+        card.innerHTML = `
+            <div class="boss-number">
+                BOSS #${index + 1}
+            </div>
+
+            <h2>${boss.name}</h2>
+
+            <p>
+                ${boss.description}
+            </p>
+
+            <span class="tag">
+                ${getTypeName(boss.type)}
+            </span>
+        `;
+
+        grid.appendChild(card);
+
+    });
+
+
+    counter.textContent =
+        `Показано боссов: ${filtered.length} из ${bosses.length}`;
+
+}
+
+
+search.addEventListener("input", render);
+
+type.addEventListener("change", render);
+
+render();
+
+</script>
+
+</body>
+</html>
+```
+<div class="fruit">
+            <div class="emoji">🍋</div>
+            <h2>Лимон</h2>
+            <p>
+                Лимон — цитрусовый фрукт с выраженным
+                кислым вкусом. Используется в напитках,
+                блюдах и десертах.
+            </p>
+
+            <div class="info">
+                <b>На 100 г:</b><br>
+                Калории: 29 ккал<br>
+                Белок: 1,1 г<br>
+                Углеводы: 9,3 г<br>
+                Клетчатка: 2,8 г
+            </div>
+        </div>
+
+
+        <div class="fruit">
+            <div class="emoji">🥝</div>
+            <h2>Киви</h2>
+            <p>
+                Киви имеет кисло-сладкий вкус и зелёную
+                мякоть с маленькими съедобными семенами.
+                Богат витамином C.
+            </p>
+
+            <div class="info">
+                <b>На 100 г:</b><br>
+                Калории: 61 ккал<br>
+                Белок: 1,1 г<br>
+                Углеводы: 14,7 г<br>
+                Клетчатка: 3,0 г
+            </div>
+        </div>
+
+
+        <div class="fruit">
+            <div class="emoji">🍓</div>
+            <h2>Клубника</h2>
+            <p>
+                Клубника — ароматная ягода с относительно
+                низкой энергетической ценностью и высоким
+                содержанием витамина C.
+            </p>
+
+            <div class="info">
+                <b>На 100 г:</b><br>
+                Калории: 32 ккал<br>
+                Белок: 0,7 г<br>
+                Углеводы: 7,7 г<br>
+                Клетчатка: 2,0 г
+            </div>
+        </div>
+
+
+        <div class="fruit">
+            <div class="emoji">🍇</div>
+            <h2>Виноград</h2>
+            <p>
+                Виноград состоит из сочных сладких ягод.
+                Содержит природные сахара и различные
+                растительные полифенолы.
+            </p>
+
+            <div class="info">
+                <b>На 100 г:</b><br>
+                Калории: 69 ккал<br>
+                Белок: 0,7 г<br>
+                Углеводы: 18,1 г<br>
+                Клетчатка: 0,9 г
+            </div>
+        </div>
+
+
+        <div class="fruit">
+            <div class="emoji">🥭</div>
+            <h2>Манго</h2>
+            <p>
+                Манго — ароматный тропический фрукт
+                с мягкой сладкой мякотью. Содержит
+                витамин C и каротиноиды.
+            </p>
+
+            <div class="info">
+                <b>На 100 г:</b><br>
+                Калории: 60 ккал<br>
+                Белок: 0,8 г<br>
+                Углеводы: 15,0 г<br>
+                Клетчатка: 1,6 г
+            </div>
+        </div>
+
+
+        <div class="fruit">
+            <div class="emoji">🍉</div>
+            <h2>Арбуз</h2>
+            <p>
+                Арбуз — очень сочный плод с высоким
+                содержанием воды и относительно низкой
+                энергетической ценностью.
+            </p>
+
+            <div class="info">
+                <b>На 100 г:</b><br>
+                Калории: 30 ккал<br>
+                Белок: 0,6 г<br>
+                Углеводы: 7,6 г<br>
+                Клетчатка: 0,4 г
+            </div>
+        </div>
+
+
+        <div class="fruit">
+            <div class="emoji">🍍</div>
+            <h2>Ананас</h2>
+            <p>
+                Ананас — тропический фрукт с сочной
+                кисло-сладкой мякотью. Содержит витамин C
+                и фермент бромелаин.
+            </p>
+
+            <div class="info">
+                <b>На 100 г:</b><br>
+                Калории: 50 ккал<br>
+                Белок: 0,5 г<br>
+                Углеводы: 13,1 г<br>
+                Клетчатка: 1,4 г
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<footer>
+    <p>🍏 Мир фруктов © 2026</p>
+</footer>
+
+
+<script>
+
+    const search = document.getElementById("search");
+    const fruits = document.querySelectorAll(".fruit");
+
+    search.addEventListener("input", function() {
+
+        const text = search.value.toLowerCase();
+
+        fruits.forEach(function(fruit) {
+        <div class="fruit">
+            <div class="emoji">🍋</div>
+            <h2>Лимон</h2>
+            <p>
+                Лимон — цитрусовый фрукт с выраженным
+                кислым вкусом. Используется в напитках,
+                блюдах и десертах.
+            </p>
+
+            <div class="info">
+                <b>На 100 г:</b><br>
+                Калории: 29 ккал<br>
+                Белок: 1,1 г<br>
+                Углеводы: 9,3 г<br>
+                Клетчатка: 2,8 г
+            </div>
+        </div>
+
+
+        <div class="fruit">
+            <div class="emoji">🥝</div>
+            <h2>Киви</h2>
+            <p>
+                Киви имеет кисло-сладкий вкус и зелёную
+                мякоть с маленькими съедобными семенами.
+                Богат витамином C.
+            </p>
+
+            <div class="info">
+                <b>На 100 г:</b><br>
+                Калории: 61 ккал<br>
+                Белок: 1,1 г<br>
+                Углеводы: 14,7 г<br>
+                Клетчатка: 3,0 г
+            </div>
+        </div>
+
+
+        <div class="fruit">
+            <div class="emoji">🍓</div>
+            <h2>Клубника</h2>
+            <p>
+                Клубника — ароматная ягода с относительно
+                низкой энергетической ценностью и высоким
+                содержанием витамина C.
+            </p>
+
+            <div class="info">
+                <b>На 100 г:</b><br>
+                Калории: 32 ккал<br>
+                Белок: 0,7 г<br>
+                Углеводы: 7,7 г<br>
+                Клетчатка: 2,0 г
+            </div>
+        </div>
+
+
+        <div class="fruit">
+            <div class="emoji">🍇</div>
+            <h2>Виноград</h2>
+            <p>
+                Виноград состоит из сочных сладких ягод.
+                Содержит природные сахара и различные
+                растительные полифенолы.
+            </p>
+
+            <div class="info">
+                <b>На 100 г:</b><br>
+                Калории: 69 ккал<br>
+                Белок: 0,7 г<br>
+                Углеводы: 18,1 г<br>
+                Клетчатка: 0,9 г
+            </div>
+        </div>
+
+
+        <div class="fruit">
+            <div class="emoji">🥭</div>
+            <h2>Манго</h2>
+            <p>
+                Манго — ароматный тропический фрукт
+                с мягкой сладкой мякотью. Содержит
+                витамин C и каротиноиды.
+            </p>
+
+            <div class="info">
+                <b>На 100 г:</b><br>
+                Калории: 60 ккал<br>
+                Белок: 0,8 г<br>
+                Углеводы: 15,0 г<br>
+                Клетчатка: 1,6 г
+            </div>
+        </div>
+
+
+        <div class="fruit">
+            <div class="emoji">🍉</div>
+            <h2>Арбуз</h2>
+            <p>
+                Арбуз — очень сочный плод с высоким
+                содержанием воды и относительно низкой
+                энергетической ценностью.
+            </p>
+
+            <div class="info">
+                <b>На 100 г:</b><br>
+                Калории: 30 ккал<br>
+                Белок: 0,6 г<br>
+                Углеводы: 7,6 г<br>
+                Клетчатка: 0,4 г
+            </div>
+        </div>
+
+
+        <div class="fruit">
+            <div class="emoji">🍍</div>
+            <h2>Ананас</h2>
+            <p>
+                Ананас — тропический фрукт с сочной
+                кисло-сладкой мякотью. Содержит витамин C
+                и фермент бромелаин.
+            </p>
+
+            <div class="info">
+                <b>На 100 г:</b><br>
+                Калории: 50 ккал<br>
+                Белок: 0,5 г<br>
+                Углеводы: 13,1 г<br>
+                Клетчатка: 1,4 г
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<footer>
+    <p>🍏 Мир фруктов © 2026</p>
+</footer>
+
+
+<script>
+
+    const search = document.getElementById("search");
+    const fruits = document.querySelectorAll(".fruit");
+
+    search.addEventListener("input", function() {
+
+        const text = search.value.toLowerCase();
+
+        fruits.forEach(function(fruit) {
+        const name = fruit
+                .querySelector("h2")
+                .textContent
+                .toLowerCase();
+
+            if (name.includes(text)) {
+                fruit.style.display = "block";
+            } else {
+                fruit.style.display = "none";
+            }
+
+        });
+
+    });
+
+</script>
+
+</body>
+</html>
