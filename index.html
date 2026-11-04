@@ -202,6 +202,70 @@
 <main class="container">
 
     <div class="controls">
+        
+<div class="weather-widget">
+
+    <div class="weather-title">
+        LIVE WEATHER • UZBEKISTAN
+    </div>
+
+    <select id="weatherCity">
+        <option value="41.2995,69.2401">Ташкент</option>
+        <option value="39.6542,66.9597">Самарканд</option>
+        <option value="39.7747,64.4286">Бухара</option>
+        <option value="40.1039,67.8422">Джизак</option>
+        <option value="40.9983,71.6726">Наманган</option>
+        <option value="40.3842,71.7843">Фергана</option>
+        <option value="40.1104,67.8422">Гулистан</option>
+        <option value="42.4600,59.6100">Нукус</option>
+        <option value="39.6270,66.9750">Карши</option>
+        <option value="38.8600,65.7900">Термез</option>
+        <option value="41.5500,60.6333">Ургенч</option>
+    </select>
+
+    <div class="weather-main">
+
+        <div class="weather-icon" id="weatherIcon">
+            🌤️
+        </div>
+
+        <div>
+            <div class="weather-temp" id="weatherTemp">
+                --°C
+            </div>
+
+            <div class="weather-description" id="weatherDescription">
+                Загрузка погоды...
+            </div>
+        </div>
+
+    </div>
+
+    <div class="weather-details">
+
+        <div>
+            💧 Влажность:
+            <span id="weatherHumidity">--%</span>
+        </div>
+
+        <div>
+            🌬️ Ветер:
+            <span id="weatherWind">-- км/ч</span>
+        </div>
+
+        <div>
+            🌡️ Ощущается:
+            <span id="weatherFeels">--°C</span>
+        </div>
+
+    </div>
+
+    <div class="weather-updated" id="weatherUpdated">
+        Получение данных...
+    </div>
+
+</div>
+
         <input
             type="text"
             id="search"
@@ -508,6 +572,109 @@ function render() {
 search.addEventListener("input", render);
 
 type.addEventListener("change", render);
+
+const weatherCity = document.getElementById("weatherCity");
+
+async function loadWeather() {
+
+    const [latitude, longitude] = weatherCity.value.split(",");
+
+    const url =
+        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&timezone=Asia%2FTashkent`;
+
+    try {
+
+        document.getElementById("weatherDescription").textContent =
+            "Обновление погоды...";
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error("Ошибка получения погоды");
+        }
+
+        const data = await response.json();
+
+        const weather = data.current;
+
+        const temperature = Math.round(weather.temperature_2m);
+        const feels = Math.round(weather.apparent_temperature);
+        const humidity = weather.relative_humidity_2m;
+        const wind = weather.wind_speed_10m;
+        const code = weather.weather_code;
+
+        // Описание погоды
+        const weatherTypes = {
+            0: ["Ясно", "☀️"],
+            1: ["Преимущественно ясно", "🌤️"],
+            2: ["Переменная облачность", "⛅"],
+            3: ["Пасмурно", "☁️"],
+            45: ["Туман", "🌫️"],
+            48: ["Изморозь", "🌫️"],
+            51: ["Лёгкая морось", "🌦️"],
+            53: ["Морось", "🌦️"],
+            55: ["Сильная морось", "🌧️"],
+            61: ["Небольшой дождь", "🌧️"],
+            63: ["Дождь", "🌧️"],
+            65: ["Сильный дождь", "🌧️"],
+            71: ["Небольшой снег", "🌨️"],
+            73: ["Снег", "❄️"],
+            75: ["Сильный снег", "❄️"],
+            80: ["Ливень", "🌧️"],
+            81: ["Сильный ливень", "🌧️"],
+            82: ["Очень сильный ливень", "⛈️"],
+            95: ["Гроза", "⛈️"],
+            96: ["Гроза с градом", "⛈️"],
+            99: ["Сильная гроза с градом", "⛈️"]
+        };
+
+        const condition = weatherTypes[code] ||
+            ["Неизвестная погода", "🌡️"];
+
+        // Обновление интерфейса
+        document.getElementById("weatherTemp").textContent =
+            `${temperature}°C`;
+
+        document.getElementById("weatherIcon").textContent =
+            condition[1];
+
+        document.getElementById("weatherDescription").textContent =
+            condition[0];
+
+        document.getElementById("weatherHumidity").textContent =
+            `${humidity}%`;
+
+        document.getElementById("weatherWind").textContent =
+            `${wind} км/ч`;
+
+        document.getElementById("weatherFeels").textContent =
+            `${feels}°C`;
+
+        document.getElementById("weatherUpdated").textContent =
+            `Последнее обновление: ${weather.time.replace("T", " ")}`;
+
+    } catch (error) {
+
+        console.error("Weather API error:", error);
+
+        document.getElementById("weatherDescription").textContent =
+            "Не удалось загрузить погоду";
+
+        document.getElementById("weatherUpdated").textContent =
+            "Проверь подключение к интернету и попробуй снова.";
+
+    }
+
+}
+
+// При выборе другого города
+weatherCity.addEventListener("change", loadWeather);
+
+// Первая загрузка
+loadWeather();
+
+// Автоматическое обновление каждые 5 минут
+setInterval(loadWeather, 5 * 60 * 1000);
 
 render();
 
