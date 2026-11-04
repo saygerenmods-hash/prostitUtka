@@ -674,7 +674,7 @@ weatherCity.addEventListener("change", loadWeather);
 loadWeather();
 
 // Автоматическое обновление каждые 5 минут
-setInterval(loadWeather, 5 * 60 * 1000);
+setInterval(loadWeather, 30 * 1000);
 
 render();
 
@@ -685,8 +685,6 @@ render();
 
 <script>
 
-    const search = document.getElementById("search");
-    const fruits = document.querySelectorAll(".fruit");
 
     search.addEventListener("input", function() {
 
